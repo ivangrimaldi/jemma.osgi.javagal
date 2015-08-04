@@ -322,8 +322,13 @@ public class Discovery_Freshness_ForcePing {
 		}
 		newNodeWrapperChild.set_node(newNodeChild);
 
-		if (getGal().getFromNetworkCache(newNodeWrapperChild) == null) {
-			newNodeWrapperChild.set_discoveryCompleted(false);
+		// Bruno: removed
+		//if (getGal().getFromNetworkCache(newNodeWrapperChild) == null) {
+		
+		if (getGal().getFromNetworkCacheAndAdd(newNodeWrapperChild) == null) {
+			
+			// Bruno: removed
+			// newNodeWrapperChild.set_discoveryCompleted(false);
 
 			// if (LOG.isDebugEnabled()) {
 			// String shortAdd =
@@ -341,7 +346,9 @@ public class Discovery_Freshness_ForcePing {
 			// , shortAdd);
 			LOG.debug("Adding node from [DiscoveryChild] into the NetworkCache, Address:{}", Utils.getAddressString(newNodeWrapperChild.get_node().getAddress()));
 			// }
-			getGal().getNetworkcache().add(newNodeWrapperChild);
+			
+			// Bruno: removed
+			// getGal().getNetworkcache().add(newNodeWrapperChild);
 
 			/*
 			 * node child not exists
