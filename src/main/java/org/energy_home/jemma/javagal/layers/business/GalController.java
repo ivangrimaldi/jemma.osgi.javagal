@@ -2067,20 +2067,25 @@ public class GalController {
 								galNodeWrapper.set_discoveryCompleted(true);
 
 								/* If the Node Not Exists */
-								if (getFromNetworkCache(galNodeWrapper) == null) {
-									if (LOG.isDebugEnabled()) {
-										String shortAdd = (galNodeWrapper.get_node().getAddress().getNetworkAddress() != null) ? String.format("%04X", galNodeWrapper.get_node().getAddress().getNetworkAddress()) : "NULL";
-										String IeeeAdd = (galNodeWrapper.get_node().getAddress().getIeeeAddress() != null) ? String.format("%08X", galNodeWrapper.get_node().getAddress().getIeeeAddress()) : "NULL";
-
-										LOG.debug("Adding node from [SetNetworkStatus Announcement] into the NetworkCache IeeeAddress: {} --- Short: {}", IeeeAdd, shortAdd);
+								// Bruno
+								synchronized (getNetworkcache()) 
+								{
+									if (getFromNetworkCache(galNodeWrapper) == null) {
+										if (LOG.isDebugEnabled()) {
+											String shortAdd = (galNodeWrapper.get_node().getAddress().getNetworkAddress() != null) ? String.format("%04X", galNodeWrapper.get_node().getAddress().getNetworkAddress()) : "NULL";
+											String IeeeAdd = (galNodeWrapper.get_node().getAddress().getIeeeAddress() != null) ? String.format("%08X", galNodeWrapper.get_node().getAddress().getIeeeAddress()) : "NULL";
+	
+											LOG.debug("Adding node from [SetNetworkStatus Announcement] into the NetworkCache IeeeAddress: {} --- Short: {}", IeeeAdd, shortAdd);
+										}
+										getNetworkcache().add(galNodeWrapper);
 									}
-									getNetworkcache().add(galNodeWrapper);
-								}
-								/* The GAl node is already present into the DB */
-								else {
-									galNodeWrapper = getFromNetworkCache(galNodeWrapper);
-									galNodeWrapper.abortTimers();
-									galNodeWrapper.set_node(galNode);
+									
+									/* The GAl node is already present into the DB */
+									else {
+										galNodeWrapper = getFromNetworkCache(galNodeWrapper);
+										galNodeWrapper.abortTimers();
+										galNodeWrapper.set_node(galNode);
+									}
 								}
 
 							} else {
@@ -2587,14 +2592,31 @@ public class GalController {
 	 *         otherwise
 	 */
 	public WrapperWSNNode getFromNetworkCache(WrapperWSNNode nodeToSearch) {
-		 synchronized (getNetworkcache()) {
+		// synchronized (getNetworkcache()) {
 		int index = getNetworkcache().indexOf(nodeToSearch);
 		if (index > -1)
 			return getNetworkcache().get(index);
 		else
 			return null;
-		 }
-
+		// }
+	}
+	
+	// Bruno: this method check for nodeToSearch in the network cache and, if
+	// it does not exist, add it to the cache, in a synchronized region ... 
+	public WrapperWSNNode getFromNetworkCacheAndAdd(WrapperWSNNode nodeToSearch) 
+	{
+		synchronized (getNetworkcache()) 
+		{
+			int index = getNetworkcache().indexOf(nodeToSearch);
+			if (index > -1)
+				return getNetworkcache().get(index);
+			else
+			{
+				nodeToSearch.set_discoveryCompleted(false);
+				getNetworkcache().add(nodeToSearch);
+				return null;
+			}
+		}
 	}
 
 	/**
